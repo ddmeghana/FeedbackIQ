@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="FeedbackIQ — AI-Powered Feedback Analysis and Summarization System" />
+    <title>FeedbackIQ</title>
+
+    <!--
+      Google Fonts: Inter (body) + JetBrains Mono (code/IDs)
+      Loaded here so they are available before React mounts.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--
+      THEME FLASH PREVENTION
+      This inline script runs synchronously before the page renders.
+      It reads the saved theme from localStorage and applies the 'dark' class
+      to <html> immediately — preventing the white flash on dark-mode load.
+
+      Why inline and not in a JS file?
+        - External scripts are deferred; this must run before first paint.
+        - It is intentionally tiny (no imports, no dependencies).
+    -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('feedbackiq-theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var isDark =
+            saved === 'dark' ||
+            (saved === 'system' && prefersDark) ||
+            (!saved && prefersDark); // default to system preference if nothing saved
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {
+          // If localStorage is unavailable (private browsing restrictions),
+          // fall back to dark mode silently.
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
