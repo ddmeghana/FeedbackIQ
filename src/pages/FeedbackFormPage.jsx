@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Sparkles, Sun, Moon, Laptop, ArrowLeft, Shield } from 'lucide-react';
+import { Sparkles, Sun, Moon, Laptop, ArrowLeft, LayoutDashboard, Shield } from 'lucide-react';
 import FeedbackForm from '../components/feedback/FeedbackForm';
 import { mockProducts } from '../data/mockDashboardData';
 import { useThemeContext } from '../context/ThemeContext';
@@ -41,8 +41,8 @@ export default function FeedbackFormPage() {
             </span>
           </Link>
 
-          {/* Right Controls: Theme Switcher & Back Link */}
-          <div className="flex items-center gap-2">
+          {/* Right Controls: Theme Switcher & Navigation Links */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={cycleTheme}
@@ -55,10 +55,20 @@ export default function FeedbackFormPage() {
 
             <Link
               to={ROUTES.HOME}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-muted hover:text-primary hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-medium text-muted hover:text-primary hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              title="Return to Home"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Home</span>
+            </Link>
+
+            <Link
+              to={ROUTES.DASHBOARD}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-medium text-muted hover:text-primary hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              title="Go to Dashboard"
+            >
+              <LayoutDashboard className="w-3.5 h-3.5 text-accent" />
+              <span className="hidden sm:inline">Dashboard</span>
             </Link>
           </div>
         </div>

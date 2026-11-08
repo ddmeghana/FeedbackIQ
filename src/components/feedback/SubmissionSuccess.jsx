@@ -1,4 +1,4 @@
-import { CheckCircle2, RotateCcw, ArrowRight, User, Star } from 'lucide-react';
+import { CheckCircle2, RotateCcw, ArrowRight, User, Star, LayoutDashboard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Button from '../ui/Button';
 import { ROUTES } from '../../config/constants';
@@ -63,7 +63,7 @@ export default function SubmissionSuccess({ record, onReset }) {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 pt-2">
         <Button
           type="button"
           variant="primary"
@@ -73,8 +73,18 @@ export default function SubmissionSuccess({ record, onReset }) {
           Submit Another Response
         </Button>
 
+        <Link to={ROUTES.DASHBOARD}>
+          <Button
+            type="button"
+            variant="secondary"
+            leftIcon={<LayoutDashboard className="w-4 h-4 text-accent" />}
+          >
+            View Dashboard
+          </Button>
+        </Link>
+
         <Link to={ROUTES.HOME}>
-          <Button variant="secondary" rightIcon={<ArrowRight className="w-4 h-4" />}>
+          <Button type="button" variant="ghost" rightIcon={<ArrowRight className="w-4 h-4" />}>
             Back to Home
           </Button>
         </Link>

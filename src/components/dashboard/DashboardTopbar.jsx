@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import {
   Menu,
   Sun,
@@ -6,9 +7,10 @@ import {
   Boxes,
   Calendar,
   ChevronDown,
+  MessageSquarePlus,
 } from 'lucide-react';
 import { useThemeContext } from '../../context/ThemeContext';
-import { THEMES } from '../../config/constants';
+import { THEMES, ROUTES } from '../../config/constants';
 
 export default function DashboardTopbar({
   onToggleSidebar,
@@ -111,6 +113,16 @@ export default function DashboardTopbar({
             <ChevronDown className="w-3.5 h-3.5 text-muted absolute right-2.5 pointer-events-none" />
           </div>
         </div>
+
+        {/* Give Feedback Public Form Link */}
+        <Link
+          to={ROUTES.SUBMIT}
+          className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xl border border-border text-muted hover:text-primary hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          title="Open Public Feedback Form"
+        >
+          <MessageSquarePlus className="w-3.5 h-3.5 text-accent" />
+          <span>Give Feedback</span>
+        </Link>
 
         {/* Theme Switcher */}
         <button

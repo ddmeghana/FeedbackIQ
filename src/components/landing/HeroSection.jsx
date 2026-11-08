@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles, MessageSquarePlus } from 'lucide-react';
 import { ROUTES } from '../../config/constants';
 import Button from '../ui/Button';
 
@@ -59,16 +59,25 @@ export default function HeroSection() {
           insights and actionable improvements.
         </motion.p>
 
-        {/* Single Primary CTA */}
+        {/* CTAs: Primary Dashboard & Secondary Give Feedback */}
         <motion.div
           initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.3 }}
-          className="pt-2 flex items-center justify-center"
+          className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4"
         >
           <Link to={ROUTES.DASHBOARD}>
             <Button size="lg" variant="primary" rightIcon={<ArrowRight className="w-4 h-4" />}>
               Explore Dashboard
+            </Button>
+          </Link>
+          <Link to={ROUTES.SUBMIT}>
+            <Button
+              size="lg"
+              variant="outline"
+              leftIcon={<MessageSquarePlus className="w-4 h-4 text-accent" />}
+            >
+              Give Feedback
             </Button>
           </Link>
         </motion.div>

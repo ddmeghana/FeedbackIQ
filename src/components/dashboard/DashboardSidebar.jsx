@@ -9,6 +9,8 @@ import {
   Settings,
   ArrowLeft,
   X,
+  MessageSquarePlus,
+  ArrowUpRight,
 } from 'lucide-react';
 import { ROUTES } from '../../config/constants';
 
@@ -108,6 +110,24 @@ export default function DashboardSidebar({ mobileOpen, onClose }) {
                   Soon
                 </span>
               </button>
+            </div>
+
+            {/* Public Respondent Portal */}
+            <div className="pt-3 mt-1 border-t border-border/60">
+              <div className="px-3 pb-1.5 text-[10px] font-mono uppercase tracking-wider text-muted font-semibold">
+                Respondent Portal
+              </div>
+              <Link
+                to={ROUTES.SUBMIT}
+                onClick={onClose}
+                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium text-muted hover:text-primary hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                <span className="flex items-center gap-3">
+                  <MessageSquarePlus className="w-4 h-4 text-accent" />
+                  <span className="font-medium text-primary">Give Feedback</span>
+                </span>
+                <ArrowUpRight className="w-3.5 h-3.5 text-muted group-hover:text-primary transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </Link>
             </div>
           </nav>
         </div>

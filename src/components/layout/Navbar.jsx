@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Layers,
   HelpCircle,
+  MessageSquarePlus,
   Menu,
   X,
   Sun,
@@ -128,6 +129,24 @@ export default function Navbar() {
           })}
 
           <Link
+            to={ROUTES.SUBMIT}
+            className={`relative px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors duration-150 flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+              location.pathname === ROUTES.SUBMIT ? 'text-primary' : 'text-muted hover:text-primary'
+            }`}
+          >
+            {location.pathname === ROUTES.SUBMIT && (
+              <motion.span
+                layoutId="activeDockPill"
+                className="absolute inset-0 bg-card rounded-lg shadow-sm border border-border/60"
+                transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                aria-hidden="true"
+              />
+            )}
+            <MessageSquarePlus className="w-3.5 h-3.5 relative z-10 text-accent" aria-hidden="true" />
+            <span className="relative z-10">Give Feedback</span>
+          </Link>
+
+          <Link
             to={ROUTES.DASHBOARD}
             className={`relative px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors duration-150 flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               location.pathname === ROUTES.DASHBOARD ? 'text-primary' : 'text-muted hover:text-primary'
@@ -202,6 +221,20 @@ export default function Navbar() {
               ))}
 
               <div className="my-1 border-t border-border" />
+
+              <Link
+                to={ROUTES.SUBMIT}
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-muted hover:text-primary hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors"
+              >
+                <span className="flex items-center gap-2.5">
+                  <MessageSquarePlus className="w-4 h-4 text-accent" />
+                  <span>Give Feedback</span>
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accent/15 text-accent font-semibold">
+                  Public
+                </span>
+              </Link>
 
               <Link
                 to={ROUTES.DASHBOARD}
