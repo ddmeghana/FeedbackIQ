@@ -2,11 +2,8 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import HeroSection from '../components/landing/HeroSection';
 import ProductPreview from '../components/landing/ProductPreview';
-import ProblemSolution from '../components/landing/ProblemSolution';
 import FeaturesSection from '../components/landing/FeaturesSection';
 import HowItWorks from '../components/landing/HowItWorks';
-import InteractiveReveal from '../components/landing/InteractiveReveal';
-import Marquee from '../components/landing/Marquee';
 import FinalCTA from '../components/landing/FinalCTA';
 
 export default function LandingPage() {
@@ -23,30 +20,21 @@ export default function LandingPage() {
       {/* Floating Dock Navbar */}
       <Navbar />
 
-      {/* Main Page Landmark */}
+      {/* Main Page Landmark — Exactly 5 Sections */}
       <main id="main-content" className="flex-1">
-        {/* Hero Section with Scramble & Particle Canvas */}
+        {/* Section 1: Hero */}
         <HeroSection />
 
-        {/* Continuous Horizontal Marquee */}
-        <Marquee />
-
-        {/* High-Fidelity Interactive Platform Preview */}
+        {/* Section 2: Product Preview */}
         <ProductPreview />
 
-        {/* The Problem & Solution Breakdown */}
-        <ProblemSolution />
-
-        {/* Bento Grid Feature Capabilities with Spotlight & Tilt */}
+        {/* Section 3: Key Features (4 concise cards) */}
         <FeaturesSection />
 
-        {/* 4-Step Process Visual */}
+        {/* Section 4: How It Works (4 simple steps) */}
         <HowItWorks />
 
-        {/* Interactive Capability Deep Dive Reveal */}
-        <InteractiveReveal />
-
-        {/* Final Conversion CTA */}
+        {/* Section 5: Final CTA */}
         <FinalCTA />
       </main>
 

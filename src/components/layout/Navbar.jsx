@@ -6,14 +6,12 @@ import {
   LayoutDashboard,
   Layers,
   HelpCircle,
-  Info,
   Menu,
   X,
   Sun,
   Moon,
   Laptop,
   ArrowRight,
-  Send,
 } from 'lucide-react';
 import { useThemeContext } from '../../context/ThemeContext';
 import { THEMES, ROUTES } from '../../config/constants';
@@ -26,15 +24,13 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
 
-  // Track scroll state for enhanced background blur
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
 
-      // Section tracking when on the landing page
       if (location.pathname === '/') {
-        const sections = ['home', 'features', 'how-it-works', 'about'];
-        const scrollPos = window.scrollY + 120;
+        const sections = ['home', 'features', 'how-it-works'];
+        const scrollPos = window.scrollY + 140;
         for (const sectionId of sections) {
           const el = document.getElementById(sectionId);
           if (el) {
@@ -53,7 +49,6 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [location.pathname]);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
@@ -62,7 +57,6 @@ export default function Navbar() {
     { id: 'home', label: 'Home', href: '/#home', icon: Sparkles },
     { id: 'features', label: 'Features', href: '/#features', icon: Layers },
     { id: 'how-it-works', label: 'How It Works', href: '/#how-it-works', icon: HelpCircle },
-    { id: 'about', label: 'About', href: '/#about', icon: Info },
   ];
 
   const cycleTheme = () => {
@@ -87,75 +81,67 @@ export default function Navbar() {
     <header className="fixed top-0 inset-x-0 z-50 flex justify-center p-3 sm:p-4 pointer-events-none">
       <nav
         aria-label="Main Navigation"
-        className={`pointer-events-auto flex items-center justify-between w-full max-w-5xl px-4 py-2.5 sm:py-3 rounded-2xl transition-all duration-300 border ${
+        className={`pointer-events-auto flex items-center justify-between w-full max-w-5xl px-4 py-2.5 sm:py-3 rounded-2xl transition-all duration-200 border ${
           scrolled
-            ? 'glass-card border-border shadow-card-dark bg-card/90 backdrop-blur-md'
-            : 'bg-card/70 border-border/80 backdrop-blur-sm shadow-sm'
+            ? 'glass-card border-border shadow-card-dark bg-card/95 backdrop-blur-md'
+            : 'bg-card/80 border-border/80 backdrop-blur-sm shadow-sm'
         }`}
       >
-        {/* Brand Logo */}
+        {/* Prominent Brand Logo & Name */}
         <Link
           to="/"
           className="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-lg"
           aria-label="FeedbackIQ Home"
         >
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-sm shadow-amber-500/20 group-hover:scale-105 transition-transform">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-sm shadow-amber-500/20 group-hover:scale-105 transition-transform">
             <Sparkles className="w-4 h-4 text-zinc-950 fill-zinc-950" />
           </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-base tracking-tight text-primary flex items-center gap-1.5">
-              Feedback<span className="text-accent">IQ</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-accent/15 text-accent font-medium uppercase tracking-wider hidden sm:inline-block">
-                AI
-              </span>
-            </span>
-          </div>
+          <span className="font-extrabold text-base tracking-tight text-primary">
+            Feedback<span className="text-accent">IQ</span>
+          </span>
         </Link>
 
-        {/* Desktop Dock Navigation Links */}
-        <div className="hidden md:flex items-center gap-1 bg-zinc-200/50 dark:bg-zinc-800/40 p-1 rounded-xl border border-border/60">
+        {/* Desktop Nav Links */}
+        <div className="hidden md:flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800/50 p-1 rounded-xl border border-border/50">
           {navLinks.map((link) => {
-            const Icon = link.icon;
             const isActive = location.pathname === '/' && activeSection === link.id;
 
             return (
               <a
                 key={link.id}
                 href={link.href}
-                className={`relative px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors duration-200 flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                className={`relative px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                   isActive ? 'text-primary' : 'text-muted hover:text-primary'
                 }`}
               >
                 {isActive && (
                   <motion.span
                     layoutId="activeDockPill"
-                    className="absolute inset-0 bg-card rounded-lg shadow-sm border border-border"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    className="absolute inset-0 bg-card rounded-lg shadow-sm border border-border/60"
+                    transition={{ type: 'spring', stiffness: 400, damping: 35 }}
                     aria-hidden="true"
                   />
                 )}
-                <Icon className="w-3.5 h-3.5 relative z-10" aria-hidden="true" />
                 <span className="relative z-10">{link.label}</span>
               </a>
             );
           })}
 
-          {/* Quick link to Dashboard in nav dock */}
           <Link
             to={ROUTES.DASHBOARD}
-            className={`relative px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors duration-200 flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+            className={`relative px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors duration-150 flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               location.pathname === ROUTES.DASHBOARD ? 'text-primary' : 'text-muted hover:text-primary'
             }`}
           >
             {location.pathname === ROUTES.DASHBOARD && (
               <motion.span
                 layoutId="activeDockPill"
-                className="absolute inset-0 bg-card rounded-lg shadow-sm border border-border"
-                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                className="absolute inset-0 bg-card rounded-lg shadow-sm border border-border/60"
+                transition={{ type: 'spring', stiffness: 400, damping: 35 }}
                 aria-hidden="true"
               />
             )}
-            <LayoutDashboard className="w-3.5 h-3.5 relative z-10" aria-hidden="true" />
+            <LayoutDashboard className="w-3.5 h-3.5 relative z-10 text-accent" aria-hidden="true" />
             <span className="relative z-10">Dashboard</span>
           </Link>
         </div>
@@ -168,15 +154,15 @@ export default function Navbar() {
             onClick={cycleTheme}
             aria-label={`Current theme: ${themeLabel}. Click to switch theme.`}
             title={`Switch theme (${themeLabel})`}
-            className="p-2 rounded-xl text-muted hover:text-primary hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 border border-transparent hover:border-border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="p-2 rounded-xl text-muted hover:text-primary hover:bg-zinc-100 dark:hover:bg-zinc-800/60 border border-transparent hover:border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             {themeIcon}
           </button>
 
-          {/* CTA: Get Started / Explore */}
+          {/* CTA: Explore Dashboard */}
           <Link to={ROUTES.DASHBOARD} className="hidden sm:inline-flex">
             <Button size="sm" variant="primary" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
-              Explore Platform
+              Explore Dashboard
             </Button>
           </Link>
 
@@ -186,7 +172,7 @@ export default function Navbar() {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-expanded={mobileMenuOpen}
             aria-label="Toggle navigation menu"
-            className="p-2 md:hidden rounded-xl text-muted hover:text-primary hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 border border-transparent hover:border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="p-2 md:hidden rounded-xl text-muted hover:text-primary hover:bg-zinc-100 dark:hover:bg-zinc-800/60 border border-transparent hover:border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -197,51 +183,32 @@ export default function Navbar() {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.98 }}
+            initial={{ opacity: 0, y: -8, scale: 0.99 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.98 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, y: -8, scale: 0.99 }}
+            transition={{ duration: 0.15 }}
             className="pointer-events-auto absolute top-16 inset-x-3 sm:inset-x-4 max-w-5xl mx-auto surface-card border border-border rounded-2xl shadow-card-dark p-4 md:hidden z-50"
           >
-            <div className="flex flex-col gap-2">
-              {navLinks.map((link) => {
-                const Icon = link.icon;
-                return (
-                  <a
-                    key={link.id}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-muted hover:text-primary hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors"
-                  >
-                    <Icon className="w-4 h-4 text-accent" />
-                    <span>{link.label}</span>
-                  </a>
-                );
-              })}
+            <div className="flex flex-col gap-1.5">
+              {navLinks.map((link) => (
+                <a
+                  key={link.id}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-3.5 py-2.5 rounded-xl text-sm font-medium text-muted hover:text-primary hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors"
+                >
+                  {link.label}
+                </a>
+              ))}
 
-              <div className="my-2 border-t border-border" />
+              <div className="my-1 border-t border-border" />
 
               <Link
                 to={ROUTES.DASHBOARD}
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-accent text-zinc-950 hover:bg-amber-400 transition-colors"
               >
-                <span className="flex items-center gap-2">
-                  <LayoutDashboard className="w-4 h-4" />
-                  Explore Dashboard
-                </span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-
-              <Link
-                to={ROUTES.SUBMIT}
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium border border-border text-primary hover:border-accent transition-colors"
-              >
-                <span className="flex items-center gap-2">
-                  <Send className="w-4 h-4 text-accent" />
-                  Submit Feedback Form
-                </span>
+                <span>Explore Dashboard</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
