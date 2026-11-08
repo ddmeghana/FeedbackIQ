@@ -51,16 +51,27 @@ export default function SubmissionSuccess({ record, onReset }) {
         </div>
       )}
 
-      {/* Honest Demo Mode Notice */}
-      <div className="max-w-md mx-auto p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-600 dark:text-amber-400 space-y-0.5">
-        <p className="font-semibold font-mono text-[11px] uppercase tracking-wider">
-          Demo Mode Notice
-        </p>
-        <p className="text-[11px] leading-relaxed">
-          Your submission has been verified on the client side. In Phase 6, this form will be
-          connected to Google Sheets and n8n for persistent cloud storage.
-        </p>
-      </div>
+      {/* Database Storage Confirmation Banner */}
+      {record?.Response_ID ? (
+        <div className="max-w-md mx-auto p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-600 dark:text-emerald-400 space-y-1">
+          <p className="font-semibold font-mono text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Saved to Google Sheets
+          </p>
+          <p className="text-[11px] leading-relaxed text-center">
+            Response ID: <span className="font-mono font-bold text-primary">{record.Response_ID}</span> &middot; Status: <span className="font-mono font-semibold">{record.Processing_Status || 'Pending'}</span>
+          </p>
+        </div>
+      ) : (
+        <div className="max-w-md mx-auto p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-600 dark:text-amber-400 space-y-0.5">
+          <p className="font-semibold font-mono text-[11px] uppercase tracking-wider">
+            Client Verification Notice
+          </p>
+          <p className="text-[11px] leading-relaxed">
+            Your submission has been verified on the client side.
+          </p>
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 pt-2">

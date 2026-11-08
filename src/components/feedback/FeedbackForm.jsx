@@ -290,7 +290,7 @@ export default function FeedbackForm({ products = [] }) {
         </Button>
 
         <p className="text-center text-[11px] text-muted font-mono">
-          Phase 5 Demo · Responses will connect to Google Sheets in Phase 6
+          Responses are securely stored in the FeedbackIQ Google Sheets database
         </p>
       </div>
     </form>

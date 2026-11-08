@@ -1,12 +1,31 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, Sun, Moon, Laptop, ArrowLeft, LayoutDashboard, Shield } from 'lucide-react';
+import {
+  Sparkles,
+  Sun,
+  Moon,
+  Laptop,
+  ArrowLeft,
+  LayoutDashboard,
+  Shield,
+  RotateCcw,
+  AlertCircle,
+  Inbox,
+} from 'lucide-react';
 import FeedbackForm from '../components/feedback/FeedbackForm';
-import { mockProducts } from '../data/mockDashboardData';
+import Spinner from '../components/ui/Spinner';
+import Button from '../components/ui/Button';
+import { getActiveProducts } from '../services/productService';
 import { useThemeContext } from '../context/ThemeContext';
 import { THEMES, ROUTES, ORG_NAME } from '../config/constants';
 
 export default function FeedbackFormPage() {
   const { theme, setTheme } = useThemeContext();
+
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isConfigError, setIsConfigError] = useState(false);
 
   const cycleTheme = () => {
     if (theme === THEMES.SYSTEM) setTheme(THEMES.DARK);
@@ -19,6 +38,25 @@ export default function FeedbackFormPage() {
     [THEMES.DARK]: <Moon className="w-4 h-4 text-amber-400" aria-hidden="true" />,
     [THEMES.SYSTEM]: <Laptop className="w-4 h-4 text-muted" aria-hidden="true" />,
   }[theme];
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    setError(null);
+    setIsConfigError(false);
+
+    const result = await getActiveProducts();
+    if (result.success) {
+      setProducts(result.data || []);
+    } else {
+      setError(result.error || 'Failed to load active products.');
+      setIsConfigError(Boolean(result.isConfigError));
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const currentYear = new Date().getFullYear();
 
@@ -90,8 +128,78 @@ export default function FeedbackFormPage() {
           </p>
         </div>
 
-        {/* The Core Feedback Form */}
-        <FeedbackForm products={mockProducts} />
+        {/* Content State: Loading, Error, Empty, or Form */}
+        {loading ? (
+          <div className="surface-card rounded-2xl p-12 border border-border text-center space-y-4">
+            <Spinner size="lg" className="text-accent mx-auto" />
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-primary">Loading active products...</p>
+              <p className="text-xs text-muted">Retrieving product registry from Google Sheets</p>
+            </div>
+          </div>
+        ) : error ? (
+          <div
+            role="alert"
+            className="surface-card rounded-2xl p-8 border border-red-500/30 text-center space-y-5 shadow-card-dark"
+          >
+            <div className="w-12 h-12 rounded-full bg-red-500/15 text-red-500 flex items-center justify-center mx-auto shadow-sm">
+              <AlertCircle className="w-6 h-6" />
+            </div>
+
+            <div className="space-y-2 max-w-md mx-auto">
+              <h2 className="text-base font-bold text-primary">Unable to Load Products</h2>
+              <p className="text-xs text-muted leading-relaxed">{error}</p>
+
+              {isConfigError && (
+                <div className="mt-4 p-4 rounded-xl bg-canvas/80 border border-border text-left text-xs space-y-2">
+                  <p className="text-accent font-semibold font-mono text-[11px] uppercase tracking-wider">
+                    Configuration Required
+                  </p>
+                  <p className="text-muted leading-relaxed">
+                    To connect to Google Sheets, set your deployed Web App URL in <code className="text-primary font-bold">.env.local</code>:
+                  </p>
+                  <pre className="p-2.5 rounded-lg bg-zinc-900 text-amber-400 font-mono text-[11px] overflow-x-auto border border-border/60">
+                    VITE_APPS_SCRIPT_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
+                  </pre>
+                  <p className="text-muted text-[11px]">
+                    See <code className="text-primary">docs/PHASE_6A_SETUP.md</code> for complete setup steps.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-1">
+              <Button
+                variant="primary"
+                onClick={fetchProducts}
+                leftIcon={<RotateCcw className="w-4 h-4" />}
+              >
+                Try Again
+              </Button>
+            </div>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="surface-card rounded-2xl p-10 border border-border text-center space-y-4 shadow-card-dark">
+            <div className="w-12 h-12 rounded-full bg-amber-500/15 text-accent flex items-center justify-center mx-auto">
+              <Inbox className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-base font-bold text-primary">No Active Products Found</h2>
+              <p className="text-xs text-muted max-w-md mx-auto leading-relaxed">
+                Feedback submissions are temporarily closed because no active products were found in the database.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={fetchProducts}
+              leftIcon={<RotateCcw className="w-4 h-4" />}
+            >
+              Refresh Products
+            </Button>
+          </div>
+        ) : (
+          <FeedbackForm products={products} />
+        )}
 
         {/* Privacy Reassurance Note */}
         <div className="flex items-center justify-center gap-2 text-center text-xs text-muted pt-2">
