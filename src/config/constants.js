@@ -15,12 +15,12 @@
 // VITE_GEMINI_MODEL is set in your .env file.
 // It is a non-secret public model name string — safe to include in VITE_ variables.
 // Change your .env to switch models without touching any other file.
-export const GEMINI_MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-3.8-flash';
+export const GEMINI_MODEL = import.meta.env?.VITE_GEMINI_MODEL || 'gemini-3.8-flash';
 
 // ─── Google Apps Script API URL ──────────────────────────────────────────────
 // This is a capability URL (not a secret) — the feedback form is public by design.
 // Set VITE_APPS_SCRIPT_URL in your .env file.
-export const APPS_SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL || '';
+export const APPS_SCRIPT_URL = import.meta.env?.VITE_APPS_SCRIPT_URL || '';
 
 // ─── Nordic Obsidian Colour Palette ──────────────────────────────────────────
 // These are used in JavaScript contexts (e.g., Recharts, canvas drawing).
@@ -103,13 +103,21 @@ export const THEME_STORAGE_KEY = 'feedbackiq-theme';
 export const RATING_MIN = 1;
 export const RATING_MAX = 5;
 
+export const RATING_LABELS = {
+  1: 'Poor',
+  2: 'Fair',
+  3: 'Average',
+  4: 'Good',
+  5: 'Excellent',
+};
+
 // ─── Form Limits ──────────────────────────────────────────────────────────────
 // These mirror the server-side validation in Apps Script.
 // Keep them in sync when changing Code.gs.
 export const FORM_LIMITS = {
-  COMMENT_MIN_LENGTH:  10,
-  COMMENT_MAX_LENGTH:  2000,
-  NAME_MAX_LENGTH:     100,
+  COMMENT_MIN_LENGTH: 10,
+  COMMENT_MAX_LENGTH: 1000,
+  NAME_MAX_LENGTH: 100,
   MAX_SUBMISSIONS_PER_HOUR: 5,
 };
 
