@@ -56,3 +56,23 @@ function sanitizeText(input) {
   }
   return str;
 }
+
+/**
+ * Coerces a value to a clean string; returns empty string if null/undefined/blank.
+ */
+function safeString(value) {
+  if (value === null || value === undefined) return '';
+  var str = String(value).trim();
+  if (str === 'undefined' || str === 'null') return '';
+  return str;
+}
+
+/**
+ * Coerces a value to a boolean.
+ * Handles: true/false, 'TRUE'/'FALSE', 'true'/'false', 1/0.
+ */
+function safeBoolean(value) {
+  if (typeof value === 'boolean') return value;
+  var str = String(value).trim().toUpperCase();
+  return str === 'TRUE' || str === '1';
+}

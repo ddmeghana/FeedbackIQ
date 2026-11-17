@@ -1,18 +1,18 @@
-import { FormInput, Database, Cpu, PieChart } from 'lucide-react';
+import { Upload, Database, Cpu, PieChart } from 'lucide-react';
 import RevealOnScroll from '../animations/RevealOnScroll';
 
 export default function HowItWorks() {
   const steps = [
     {
       num: '01',
-      title: 'Collect Feedback',
-      desc: 'Respondents submit ratings and comments through a clean, responsive web form with optional anonymity.',
-      icon: FormInput,
+      title: 'Import Feedback',
+      desc: 'Import customer feedback easily from existing Excel and CSV files.',
+      icon: Upload,
     },
     {
       num: '02',
-      title: 'Store Responses',
-      desc: 'Each response is securely stored with a unique identifier and tagged to its corresponding product.',
+      title: 'Centralize Dataset',
+      desc: 'Each response is securely stored in your central FeedbackIQ database and tagged to its product.',
       icon: Database,
     },
     {

@@ -2,27 +2,39 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   Sparkles,
   LayoutDashboard,
+  Upload,
+  Package,
   Layers,
   History,
   Lightbulb,
   FileText,
   Settings,
+  User,
   ArrowLeft,
   X,
-  MessageSquarePlus,
-  ArrowUpRight,
+  LogOut,
 } from 'lucide-react';
 import { ROUTES } from '../../config/constants';
+import { adminLogout } from '../../services/adminAuthService';
 
 export default function DashboardSidebar({ mobileOpen, onClose }) {
   const location = useLocation();
 
+  const handleLogout = async () => {
+    await adminLogout();
+    window.location.reload(); // Force RequireAdminAuth to re-evaluate
+  };
+
   const navItems = [
-    { label: 'Overview', path: ROUTES.DASHBOARD, icon: LayoutDashboard },
+    { label: 'Overview',         path: ROUTES.DASHBOARD,        icon: LayoutDashboard },
+    { label: 'Import Data',      path: ROUTES.IMPORT,           icon: Upload },
+    { label: 'Manage Products',  path: ROUTES.PRODUCTS,         icon: Package },
     { label: 'Product Analysis', path: ROUTES.PRODUCT_ANALYSIS, icon: Layers },
     { label: 'Feedback History', path: ROUTES.FEEDBACK_HISTORY, icon: History },
-    { label: 'AI Insights', path: ROUTES.AI_INSIGHTS, icon: Lightbulb },
-    { label: 'Reports', path: ROUTES.REPORTS, icon: FileText },
+    { label: 'AI Insights',      path: ROUTES.AI_INSIGHTS,      icon: Lightbulb },
+    { label: 'Reports',          path: ROUTES.REPORTS,          icon: FileText },
+    { label: 'Settings',         path: ROUTES.SETTINGS,         icon: Settings },
+    { label: 'Admin Profile',    path: ROUTES.PROFILE,          icon: User },
   ];
 
   return (
@@ -93,47 +105,11 @@ export default function DashboardSidebar({ mobileOpen, onClose }) {
                 </Link>
               );
             })}
-
-            {/* Settings (Placeholder) */}
-            <div className="pt-2">
-              <button
-                type="button"
-                disabled
-                title="Settings will be enabled in future releases"
-                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium text-muted/50 cursor-not-allowed select-none"
-              >
-                <span className="flex items-center gap-3">
-                  <Settings className="w-4 h-4" />
-                  <span>Settings</span>
-                </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-muted">
-                  Soon
-                </span>
-              </button>
-            </div>
-
-            {/* Public Respondent Portal */}
-            <div className="pt-3 mt-1 border-t border-border/60">
-              <div className="px-3 pb-1.5 text-[10px] font-mono uppercase tracking-wider text-muted font-semibold">
-                Respondent Portal
-              </div>
-              <Link
-                to={ROUTES.SUBMIT}
-                onClick={onClose}
-                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium text-muted hover:text-primary hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                <span className="flex items-center gap-3">
-                  <MessageSquarePlus className="w-4 h-4 text-accent" />
-                  <span className="font-medium text-primary">Give Feedback</span>
-                </span>
-                <ArrowUpRight className="w-3.5 h-3.5 text-muted group-hover:text-primary transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </Link>
-            </div>
           </nav>
         </div>
 
-        {/* Sidebar Footer — Return to Landing */}
-        <div className="p-4 border-t border-border space-y-3">
+        {/* Sidebar Footer — Return to Landing & Logout */}
+        <div className="p-4 border-t border-border space-y-2">
           <div className="px-2 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/50 border border-border/60 text-[11px] font-mono text-muted flex items-center justify-between">
             <span>Org Mode</span>
             <span className="text-emerald-500 font-medium">Single-Tenant</span>
@@ -146,6 +122,16 @@ export default function DashboardSidebar({ mobileOpen, onClose }) {
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Return to Landing Page</span>
           </Link>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+            aria-label="Logout from admin dashboard"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Log Out</span>
+          </button>
         </div>
       </aside>
     </>

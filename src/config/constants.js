@@ -82,12 +82,16 @@ export const PROCESSING_STATUS = {
 // ─── Route Paths ──────────────────────────────────────────────────────────────
 export const ROUTES = {
   HOME:            '/',
+  LOGIN:           '/login',
   DASHBOARD:       '/dashboard',
+  IMPORT:          '/import',
+  PRODUCTS:        '/products',
   PRODUCT_ANALYSIS:'/analysis',
   FEEDBACK_HISTORY:'/history',
   AI_INSIGHTS:     '/insights',
   REPORTS:         '/reports',
-  SUBMIT:          '/submit',
+  SETTINGS:        '/settings',
+  PROFILE:         '/profile',
 };
 
 // ─── Theme Options ────────────────────────────────────────────────────────────
@@ -98,6 +102,7 @@ export const THEMES = {
 };
 
 export const THEME_STORAGE_KEY = 'feedbackiq-theme';
+export const DEFAULT_PERIOD_STORAGE_KEY = 'feedbackiq-default-period';
 
 // ─── Rating Scale ─────────────────────────────────────────────────────────────
 export const RATING_MIN = 1;

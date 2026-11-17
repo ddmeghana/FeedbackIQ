@@ -22,7 +22,7 @@ export default function FeedbackTrendChart({ data = [] }) {
         <div className="surface-card p-2.5 rounded-xl border border-border shadow-md text-xs space-y-1">
           <div className="font-semibold text-primary">{label}</div>
           <div className="text-accent font-mono">
-            {payload[0].value} responses submitted
+            {payload[0].value} feedback entries
           </div>
         </div>
       );
@@ -35,7 +35,7 @@ export default function FeedbackTrendChart({ data = [] }) {
       <div className="space-y-1 mb-2">
         <h3 className="text-sm font-bold text-primary">Feedback Activity Trend</h3>
         <p className="text-[11px] text-muted">
-          Submission volume aggregated across chronologically sorted entries
+          Feedback volume aggregated across chronologically sorted entries
         </p>
       </div>
 

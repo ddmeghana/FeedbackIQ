@@ -8,14 +8,9 @@ export default function DashboardHeader({
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border/80">
       <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          <h1 className="text-xl sm:text-2xl font-bold text-primary tracking-tight">
-            Overview
-          </h1>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/25 font-semibold uppercase tracking-wider">
-            DEMO DATA
-          </span>
-        </div>
+        <h1 className="text-xl sm:text-2xl font-bold text-primary tracking-tight">
+          Overview
+        </h1>
         <p className="text-xs sm:text-sm text-muted">
           Understand customer feedback and discover what needs improvement.
         </p>

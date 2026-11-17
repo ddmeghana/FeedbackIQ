@@ -10,6 +10,7 @@ export default function DashboardLayout({
   dateRange,
   onSelectDateRange,
   pageTitle = 'Dashboard Overview',
+  showProductSelector = true,
 }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -32,6 +33,7 @@ export default function DashboardLayout({
           dateRange={dateRange}
           onSelectDateRange={onSelectDateRange}
           onToggleSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+          showProductSelector={showProductSelector}
         />
 
         {/* Dynamic Content View */}

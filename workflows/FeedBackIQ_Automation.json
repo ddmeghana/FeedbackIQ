@@ -1,0 +1,483 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1eabdf71-e229-4090-b78d-254ca5fd6dc0",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "FeedbackIQ Database",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Feedback",
+          "cachedResultUrl": ""
+        },
+        "options": {
+          "returnFirstMatch": false
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "f1e24be5-8c7b-4e1a-9b3a-efd05b5396c9",
+      "name": "Get row(s) in sheet"
+      
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bbd789ba-2651-43f3-9553-ad37bd8bbc54",
+              "leftValue": "={{ $json.Processing_Status }}",
+              "rightValue": "Pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "e228a1e0-bf73-4a51-bbc6-9bcbb3620d23",
+              "leftValue": "={{ $json.Comment }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "3036a225-31e8-4fd8-b753-27c9981fc489",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert customer feedback analyst for FeedbackIQ.\n\nAnalyse the following individual customer feedback.\n\nProduct Name: {{ $json.Product_Name }}\nRating: {{ $json.Rating }}\nCustomer Comment: {{ $json.Comment }}\n\nPerform these four tasks:\n\n1. Sentiment Analysis:\nClassify the feedback as exactly one of: Positive, Neutral, Negative.\n\n2. Category Classification:\nChoose the single most relevant category from:\nProduct Quality, Performance, Usability, Pricing, Customer Support, Delivery, Battery, Design, Other.\n\n3. Feedback Summary:\nWrite a concise summary of the customer's main opinion or concern in 1–2 sentences.\n\n4. Suggested Action:\nRecommend one practical, specific action the organization should take based on this feedback.\n\nIMPORTANT RULES:\n- Analyse only the information provided.\n- Do not invent facts or assume details not mentioned.\n- Consider both positive and negative points if the feedback contains both.\n- Return only valid JSON.\n- Do not include Markdown code fences or additional explanations.\n\nUse exactly this JSON structure:\n\n{\n  \"sentiment\": \"Positive\",\n  \"category\": \"Performance\",\n  \"summary\": \"The customer's actual feedback summary.\",\n  \"suggested_action\": \"A practical recommended action.\"\n}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1040,
+        144
+      ],
+      "id": "7f7eee64-1720-4c4c-a92e-7fa70600b557",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen3.8-27b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        848,
+        320
+      ],
+      "id": "16d0e85d-cab5-4111-8ca3-ce3509efd6c8",
+      "name": "Groq Chat Model"
+      
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst raw = $json.text;\n\nif (!raw) {\n  throw new Error(\"AI response is missing.\");\n}\n\nconst cleaned = raw\n  .replace(/^```(?:json)?\\s*/i, \"\")\n  .replace(/\\s*```$/, \"\")\n  .trim();\n\nconst result = JSON.parse(cleaned);\n\nconst allowedSentiments = [\"Positive\", \"Neutral\", \"Negative\"];\nconst allowedCategories = [\n  \"Product Quality\",\n  \"Performance\",\n  \"Usability\",\n  \"Pricing\",\n  \"Customer Support\",\n  \"Delivery\",\n  \"Battery\",\n  \"Design\",\n  \"Other\"\n];\n\nif (!allowedSentiments.includes(result.sentiment)) {\n  throw new Error(\"Invalid sentiment returned by AI.\");\n}\n\nif (!allowedCategories.includes(result.category)) {\n  throw new Error(\"Invalid category returned by AI.\");\n}\n\nif (!result.summary || !result.suggested_action) {\n  throw new Error(\"AI response is missing required fields.\");\n}\n\nreturn {\n  json: {\n    sentiment: result.sentiment,\n    category: result.category,\n    summary: result.summary,\n    suggested_action: result.suggested_action\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        144
+      ],
+      "id": "570b4e12-2536-44a5-99bb-a742f617b18d",
+      "name": "Parse AI Analysis"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        432,
+        320
+      ],
+      "id": "284d0419-ec60-4bea-b03a-31ca841da01a",
+      "name": "Merge Original Feedback + AI"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "FeedbackIQ Database",
+          "cachedResultUrl": ""},
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Feedback",
+          "cachedResultUrl": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Response_ID": "={{ $json.Response_ID }}",
+            "Sentiment": "={{ $json.sentiment }}",
+            "Category": "={{ $json.category }}",
+            "Summary": "=\t{{ $json.summary }}",
+            "Suggested_Action": "={{ $json.suggested_action }}",
+            "Processing_Status": "Analyzed"
+          },
+          "matchingColumns": [
+            "Response_ID"
+          ],
+          "schema": [
+            {
+              "id": "Response_ID",
+              "displayName": "Response_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product_ID",
+              "displayName": "Product_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product_Name",
+              "displayName": "Product_Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Respondent_Name",
+              "displayName": "Respondent_Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Is_Anonymous",
+              "displayName": "Is_Anonymous",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Rating",
+              "displayName": "Rating",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Comment",
+              "displayName": "Comment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sentiment",
+              "displayName": "Sentiment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Suggested_Action",
+              "displayName": "Suggested_Action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Processing_Status",
+              "displayName": "Processing_Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1024,
+        464
+      ],
+      "id": "912b3d05-2a78-4ea5-9266-fd6d0f82fbf0",
+      "name": "Update row in sheet"
+      
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        672,
+        0
+      ],
+      "id": "16a033c1-5229-48c3-919d-f700ad6f859c",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1248,
+        464
+      ],
+      "id": "ddec5cb0-48af-4d52-8df5-af7595bc261f",
+      "name": "Wait",
+      "webhookId": "a9a4ad88-0870-4c38-bdcb-7dd5c65aa10f"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Analysis": {
+      "main": [
+        [
+          {
+            "node": "Merge Original Feedback + AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Original Feedback + AI": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Merge Original Feedback + AI",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "f94bd952-602c-41cb-bbfc-ed48fd073e5f",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "id": "l2azNorWJmiqdR3l",
+  "tags": []
+}

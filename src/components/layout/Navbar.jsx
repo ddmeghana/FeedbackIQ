@@ -3,20 +3,16 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles,
-  LayoutDashboard,
   Layers,
   HelpCircle,
-  MessageSquarePlus,
   Menu,
   X,
   Sun,
   Moon,
   Laptop,
-  ArrowRight,
 } from 'lucide-react';
 import { useThemeContext } from '../../context/ThemeContext';
-import { THEMES, ROUTES } from '../../config/constants';
-import Button from '../ui/Button';
+import { THEMES } from '../../config/constants';
 
 export default function Navbar() {
   const location = useLocation();
@@ -82,28 +78,30 @@ export default function Navbar() {
     <header className="fixed top-0 inset-x-0 z-50 flex justify-center p-3 sm:p-4 pointer-events-none">
       <nav
         aria-label="Main Navigation"
-        className={`pointer-events-auto flex items-center justify-between w-full max-w-5xl px-4 py-2.5 sm:py-3 rounded-2xl transition-all duration-200 border ${
+        className={`pointer-events-auto grid grid-cols-2 md:grid-cols-[1fr_auto_1fr] items-center w-full max-w-5xl px-4 py-2.5 sm:py-3 rounded-2xl transition-all duration-200 border ${
           scrolled
             ? 'glass-card border-border shadow-card-dark bg-card/95 backdrop-blur-md'
             : 'bg-card/80 border-border/80 backdrop-blur-sm shadow-sm'
         }`}
       >
-        {/* Prominent Brand Logo & Name */}
-        <Link
-          to="/"
-          className="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-lg"
-          aria-label="FeedbackIQ Home"
-        >
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-sm shadow-amber-500/20 group-hover:scale-105 transition-transform">
-            <Sparkles className="w-4 h-4 text-zinc-950 fill-zinc-950" />
-          </div>
-          <span className="font-extrabold text-base tracking-tight text-primary">
-            Feedback<span className="text-accent">IQ</span>
-          </span>
-        </Link>
+        {/* Left: Prominent Brand Logo & Name */}
+        <div className="justify-self-start flex items-center">
+          <Link
+            to="/"
+            className="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-lg"
+            aria-label="FeedbackIQ Home"
+          >
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-sm shadow-amber-500/20 group-hover:scale-105 transition-transform">
+              <Sparkles className="w-4 h-4 text-zinc-950 fill-zinc-950" />
+            </div>
+            <span className="font-extrabold text-base tracking-tight text-primary">
+              Feedback<span className="text-accent">IQ</span>
+            </span>
+          </Link>
+        </div>
 
-        {/* Desktop Nav Links */}
-        <div className="hidden md:flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800/50 p-1 rounded-xl border border-border/50">
+        {/* Center: Desktop Nav Links (Precisely Centered relative to entire navbar) */}
+        <div className="hidden md:flex justify-self-center items-center gap-1 bg-zinc-100 dark:bg-zinc-800/50 p-1 rounded-xl border border-border/50">
           {navLinks.map((link) => {
             const isActive = location.pathname === '/' && activeSection === link.id;
 
@@ -111,7 +109,7 @@ export default function Navbar() {
               <a
                 key={link.id}
                 href={link.href}
-                className={`relative px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                className={`relative px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent whitespace-nowrap ${
                   isActive ? 'text-primary' : 'text-muted hover:text-primary'
                 }`}
               >
@@ -127,46 +125,10 @@ export default function Navbar() {
               </a>
             );
           })}
-
-          <Link
-            to={ROUTES.SUBMIT}
-            className={`relative px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors duration-150 flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-              location.pathname === ROUTES.SUBMIT ? 'text-primary' : 'text-muted hover:text-primary'
-            }`}
-          >
-            {location.pathname === ROUTES.SUBMIT && (
-              <motion.span
-                layoutId="activeDockPill"
-                className="absolute inset-0 bg-card rounded-lg shadow-sm border border-border/60"
-                transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-                aria-hidden="true"
-              />
-            )}
-            <MessageSquarePlus className="w-3.5 h-3.5 relative z-10 text-accent" aria-hidden="true" />
-            <span className="relative z-10">Give Feedback</span>
-          </Link>
-
-          <Link
-            to={ROUTES.DASHBOARD}
-            className={`relative px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors duration-150 flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-              location.pathname === ROUTES.DASHBOARD ? 'text-primary' : 'text-muted hover:text-primary'
-            }`}
-          >
-            {location.pathname === ROUTES.DASHBOARD && (
-              <motion.span
-                layoutId="activeDockPill"
-                className="absolute inset-0 bg-card rounded-lg shadow-sm border border-border/60"
-                transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-                aria-hidden="true"
-              />
-            )}
-            <LayoutDashboard className="w-3.5 h-3.5 relative z-10 text-accent" aria-hidden="true" />
-            <span className="relative z-10">Dashboard</span>
-          </Link>
         </div>
 
-        {/* Right Actions: Theme Selector + CTA */}
-        <div className="flex items-center gap-2">
+        {/* Right: Theme Selector & Mobile Toggle */}
+        <div className="justify-self-end flex items-center gap-2">
           {/* Theme Switcher Button */}
           <button
             type="button"
@@ -177,13 +139,6 @@ export default function Navbar() {
           >
             {themeIcon}
           </button>
-
-          {/* CTA: Explore Dashboard */}
-          <Link to={ROUTES.DASHBOARD} className="hidden sm:inline-flex">
-            <Button size="sm" variant="primary" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
-              Explore Dashboard
-            </Button>
-          </Link>
 
           {/* Mobile Hamburger Toggle */}
           <button
@@ -219,31 +174,6 @@ export default function Navbar() {
                   {link.label}
                 </a>
               ))}
-
-              <div className="my-1 border-t border-border" />
-
-              <Link
-                to={ROUTES.SUBMIT}
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-muted hover:text-primary hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors"
-              >
-                <span className="flex items-center gap-2.5">
-                  <MessageSquarePlus className="w-4 h-4 text-accent" />
-                  <span>Give Feedback</span>
-                </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accent/15 text-accent font-semibold">
-                  Public
-                </span>
-              </Link>
-
-              <Link
-                to={ROUTES.DASHBOARD}
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-accent text-zinc-950 hover:bg-amber-400 transition-colors"
-              >
-                <span>Explore Dashboard</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
             </div>
           </motion.div>
         )}

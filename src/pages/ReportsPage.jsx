@@ -1,44 +1,131 @@
-import { Link } from 'react-router-dom';
-import { FileText, ArrowLeft, Clock } from 'lucide-react';
+/**
+ * FeedbackIQ — Phase 11: Executive PDF Reports Page
+ *
+ * Full-featured executive report generation suite:
+ *   - Live product registry and dynamic Google Sheets feedback records
+ *   - Customizable title, product scope, and date-range filtering (including custom ranges)
+ *   - Modular section toggles
+ *   - Interactive browser preview
+ *   - Client-side multi-page PDF generation via jsPDF
+ */
+
+import { useState, useCallback, useMemo } from 'react';
 import DashboardLayout from '../components/dashboard/DashboardLayout';
-import Button from '../components/ui/Button';
+import DashboardStatus from '../components/dashboard/DashboardStatus';
+import ReportConfigForm, { DEFAULT_REPORT_TITLE } from '../components/reports/ReportConfigForm';
+import ReportPreview from '../components/reports/ReportPreview';
+import { useDashboardData } from '../hooks/useDashboardData';
+import { buildReportData } from '../services/reportDataService';
+import { clearSession } from '../services/adminAuthService';
 import { ROUTES } from '../config/constants';
-import { useDashboardFilters } from '../hooks/useDashboardFilters';
 
 export default function ReportsPage() {
-  const { products, selectedProduct, setSelectedProduct, dateRange, setDateRange } =
-    useDashboardFilters();
+  const {
+    products,
+    allRecords,
+    loading,
+    error,
+    sessionExpired,
+    lastRefreshed,
+    refresh,
+  } = useDashboardData('ALL', 'all');
+
+  // Handle session expiry
+  const handleSessionExpired = useCallback(() => {
+    clearSession();
+    window.location.href = ROUTES.LOGIN;
+  }, []);
+
+  // Configuration state
+  const [config, setConfig] = useState({
+    title: DEFAULT_REPORT_TITLE,
+    productScope: 'ALL',
+    dateRange: '30d',
+    customStartDate: '',
+    customEndDate: '',
+    sections: {
+      overview: true,
+      kpis: true,
+      sentiment: true,
+      ratings: true,
+      categories: true,
+      praise_pain: true,
+      product_comparison: true,
+      actions: true,
+      references: true,
+    },
+  });
+
+  // Current view: 'config' | 'preview'
+  const [viewMode, setViewMode] = useState('config');
+  const [reportData, setReportData] = useState(null);
+
+  // Generate Report
+  const handleGenerate = () => {
+    const data = buildReportData({
+      config,
+      products,
+      allRecords,
+    });
+    setReportData(data);
+    setViewMode('preview');
+  };
+
+  const handleRegenerate = () => {
+    const data = buildReportData({
+      config,
+      products,
+      allRecords,
+    });
+    setReportData(data);
+  };
+
+  const handleBackToConfig = () => {
+    setViewMode('config');
+  };
 
   return (
     <DashboardLayout
       products={products}
-      selectedProduct={selectedProduct}
-      onSelectProduct={setSelectedProduct}
-      dateRange={dateRange}
-      onSelectDateRange={setDateRange}
-      pageTitle="Reports"
+      selectedProduct={config.productScope}
+      onSelectProduct={(p) => setConfig((prev) => ({ ...prev, productScope: p }))}
+      dateRange={config.dateRange}
+      onSelectDateRange={(d) => setConfig((prev) => ({ ...prev, dateRange: d }))}
+      lastRefreshed={lastRefreshed}
+      onRefresh={refresh}
+      loading={loading}
+      pageTitle="Executive PDF Reports"
     >
-      <div className="surface-card rounded-2xl p-8 border border-border text-center max-w-lg mx-auto my-12 space-y-4">
-        <div className="w-12 h-12 rounded-xl bg-accent/15 text-accent flex items-center justify-center mx-auto">
-          <FileText className="w-6 h-6" />
-        </div>
-        <div className="space-y-1">
-          <h2 className="text-lg font-bold text-primary">Executive PDF Reports</h2>
-          <p className="text-xs text-muted leading-relaxed">
-            Report configuration, date-filtering, and client-side PDF export generation using jsPDF
-            will be implemented in Phase 11.
-          </p>
-        </div>
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-mono text-amber-500">
-          <Clock className="w-3.5 h-3.5" /> Scheduled for Phase 11
-        </div>
-        <div className="pt-2">
-          <Link to={ROUTES.DASHBOARD}>
-            <Button size="sm" variant="secondary" leftIcon={<ArrowLeft className="w-4 h-4" />}>
-              Return to Overview
-            </Button>
-          </Link>
-        </div>
+      <div className="space-y-6">
+        <DashboardStatus
+          loading={loading}
+          error={error}
+          sessionExpired={sessionExpired}
+          onRetry={refresh}
+          onLogin={handleSessionExpired}
+        />
+
+        {!loading && !error && !sessionExpired && (
+          <>
+            {viewMode === 'config' ? (
+              <ReportConfigForm
+                config={config}
+                onChangeConfig={setConfig}
+                onGenerate={handleGenerate}
+                products={products}
+                loading={loading}
+              />
+            ) : (
+              reportData && (
+                <ReportPreview
+                  reportData={reportData}
+                  onBackToConfig={handleBackToConfig}
+                  onRegenerate={handleRegenerate}
+                />
+              )
+            )}
+          </>
+        )}
       </div>
     </DashboardLayout>
   );

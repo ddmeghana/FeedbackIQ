@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import {
   Menu,
   Sun,
@@ -7,7 +7,7 @@ import {
   Boxes,
   Calendar,
   ChevronDown,
-  MessageSquarePlus,
+  User,
 } from 'lucide-react';
 import { useThemeContext } from '../../context/ThemeContext';
 import { THEMES, ROUTES } from '../../config/constants';
@@ -20,7 +20,12 @@ export default function DashboardTopbar({
   dateRange,
   onSelectDateRange,
   pageTitle = 'Dashboard Overview',
+  showProductSelector = true,
 }) {
+  const location = useLocation();
+  const isAnalysisPage =
+    location.pathname === ROUTES.PRODUCT_ANALYSIS || location.pathname.startsWith('/analysis');
+  const shouldRenderProductSelector = showProductSelector && !isAnalysisPage;
   const { theme, setTheme } = useThemeContext();
 
   const cycleTheme = () => {
@@ -67,29 +72,31 @@ export default function DashboardTopbar({
 
       {/* Right: Dynamic Product Selector, Date Range, Theme */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Dynamic Product Selector */}
-        <div className="relative">
-          <label htmlFor="topbar-product-select" className="sr-only">
-            Select Product
-          </label>
-          <div className="relative flex items-center">
-            <Boxes className="w-3.5 h-3.5 text-accent absolute left-3 pointer-events-none" />
-            <select
-              id="topbar-product-select"
-              value={selectedProduct}
-              onChange={(e) => onSelectProduct(e.target.value)}
-              className="appearance-none pl-8 pr-8 py-1.5 text-xs font-medium rounded-xl bg-card text-primary border border-border hover:border-accent/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
-            >
-              <option value="ALL">All Products (Combined)</option>
-              {products.map((p) => (
-                <option key={p.Product_ID} value={p.Product_ID}>
-                  {p.Product_Name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="w-3.5 h-3.5 text-muted absolute right-2.5 pointer-events-none" />
+        {/* Dynamic Product Selector (Hidden on /analysis to prevent duplicate controls) */}
+        {shouldRenderProductSelector && (
+          <div className="relative">
+            <label htmlFor="topbar-product-select" className="sr-only">
+              Select Product
+            </label>
+            <div className="relative flex items-center">
+              <Boxes className="w-3.5 h-3.5 text-accent absolute left-3 pointer-events-none" />
+              <select
+                id="topbar-product-select"
+                value={selectedProduct}
+                onChange={(e) => onSelectProduct(e.target.value)}
+                className="appearance-none pl-8 pr-8 py-1.5 text-xs font-medium rounded-xl bg-card text-primary border border-border hover:border-accent/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
+              >
+                <option value="ALL">All Products (Combined)</option>
+                {products.map((p) => (
+                  <option key={p.Product_ID} value={p.Product_ID}>
+                    {p.Product_Name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-muted absolute right-2.5 pointer-events-none" />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Date Range Selector */}
         <div className="relative">
@@ -114,16 +121,6 @@ export default function DashboardTopbar({
           </div>
         </div>
 
-        {/* Give Feedback Public Form Link */}
-        <Link
-          to={ROUTES.SUBMIT}
-          className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xl border border-border text-muted hover:text-primary hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          title="Open Public Feedback Form"
-        >
-          <MessageSquarePlus className="w-3.5 h-3.5 text-accent" />
-          <span>Give Feedback</span>
-        </Link>
-
         {/* Theme Switcher */}
         <button
           type="button"
@@ -134,6 +131,16 @@ export default function DashboardTopbar({
         >
           {themeIcon}
         </button>
+
+        {/* Profile Avatar Pill */}
+        <Link
+          to={ROUTES.PROFILE}
+          aria-label="Admin Profile"
+          title="Admin Profile"
+          className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/20 border border-amber-500/30 flex items-center justify-center text-xs font-bold text-accent hover:bg-amber-500/30 hover:border-amber-500/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          AD
+        </Link>
       </div>
     </header>
   );

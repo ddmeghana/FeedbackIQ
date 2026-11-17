@@ -1,53 +1,49 @@
 /**
  * FeedbackIQ — Main Google Apps Script API Router
  *
- * Provides the public HTTP Web App entry points:
- *   - doGet(e): Health check and public active products retrieval
- *   - doPost(e): Public feedback submission with server-side validation and database locking
+ * HTTP entry points:
+ *   - doGet(e):  Health check | Public product retrieval
+ *   - doPost(e): Admin login | Admin data retrieval | Admin logout
  *
- * ARCHITECTURAL SECURITY NOTE:
- * This endpoint is public for respondent feedback submissions.
- * It strictly DOES NOT expose administrative feedback records or private respondent comments.
- * All responses are served as JSON via ContentService with standard CORS headers.
+ * PUBLIC ACTIONS (no authentication):
+ *   GET  ?action=health        — API health check
+ *   GET  ?action=getProducts   — Active products list
+ *   POST { action: "adminLogin", pin: "..." } — Admin login authentication
+ *
+ * ADMIN ACTIONS (require session token in POST body):
+ *   POST { action: "adminLogout", token: "..." }                         — Invalidate caller's session
+ *   POST { action: "getFeedback", token: "...", page: 1, pageSize: 50 }  — Retrieve feedback records
+ *   POST { action: "getProducts", token: "..." }                         — Admin product list
+ *   POST { action: "adminImportFeedback", token: "...", records: [...] } — Import normalized feedback records
+ *   POST { action: "adminAddProduct",    token: "...", productName: "..." } — Add a new product to the registry
+ *
+ * CORS NOTE:
+ * All POST requests use Content-Type: text/plain on the client to avoid OPTIONS preflight.
+ * Google Apps Script redirects to script.googleusercontent.com with Access-Control-Allow-Origin: *.
  */
 
-/**
- * Handles incoming HTTP GET requests.
- *
- * Supported Actions:
- *   ?action=health         - Confirms API responsiveness and spreadsheet connection (Default)
- *   ?action=getProducts    - Returns list of currently active products for respondent form
- *
- * @param {GoogleAppsScript.Events.DoGet} e
- * @returns {GoogleAppsScript.Content.TextOutput}
- */
 function doGet(e) {
   try {
-    var action = (e && e.parameter && e.parameter.action) ? String(e.parameter.action).trim().toLowerCase() : 'health';
+    var action = (e && e.parameter && e.parameter.action)
+      ? String(e.parameter.action).trim().toLowerCase()
+      : 'health';
 
-    // 1. Get Active Products
     if (action === 'getproducts' || action === 'products') {
       var ss = getSpreadsheet();
       var products = getActiveProducts(ss);
-      return createJsonResponse({
-        success: true,
-        data: products,
-      });
+      return createJsonResponse({ success: true, data: products });
     }
 
-    // 2. Health Check (Default)
-    var ssHealth = getSpreadsheet();
-    var productsSheet = ssHealth.getSheetByName(CONFIG.SHEET_NAMES.PRODUCTS);
-    var feedbackSheet = ssHealth.getSheetByName(CONFIG.SHEET_NAMES.FEEDBACK);
+    // Default: health check
+    var ssH = getSpreadsheet();
+    var prodSheet = ssH.getSheetByName(CONFIG.SHEET_NAMES.PRODUCTS);
+    var fbSheet   = ssH.getSheetByName(CONFIG.SHEET_NAMES.FEEDBACK);
 
-    if (!productsSheet || !feedbackSheet) {
+    if (!prodSheet || !fbSheet) {
       return createJsonResponse({
         success: false,
-        message: 'Database check failed: One or more required sheets (Products, Feedback) are missing.',
-        sheetsFound: {
-          products: Boolean(productsSheet),
-          feedback: Boolean(feedbackSheet),
-        },
+        message: 'Database check failed: One or more required sheets are missing.',
+        sheetsFound: { products: Boolean(prodSheet), feedback: Boolean(fbSheet) },
       });
     }
 
@@ -55,91 +51,235 @@ function doGet(e) {
       success: true,
       message: 'FeedbackIQ API is healthy and connected to Google Sheets.',
       status: 'healthy',
-      sheetsFound: {
-        products: true,
-        feedback: true,
-      },
+      sheetsFound: { products: true, feedback: true },
     });
   } catch (err) {
-    return createJsonResponse({
-      success: false,
-      message: err.message || 'An error occurred during GET processing.',
-    });
+    return createJsonResponse({ success: false, message: err.message || 'GET error.' });
   }
 }
 
-/**
- * Handles incoming HTTP POST requests for feedback submission.
- *
- * Expected payload (sent as text/plain or application/json containing JSON string):
- * {
- *   "productId": "PROD-001",
- *   "rating": 5,
- *   "comment": "Exceptional product experience...",
- *   "isAnonymous": false,
- *   "respondentName": "John Doe"
- * }
- *
- * @param {GoogleAppsScript.Events.DoPost} e
- * @returns {GoogleAppsScript.Content.TextOutput}
- */
 function doPost(e) {
   try {
     if (!e || !e.postData || !e.postData.contents) {
-      return createJsonResponse({
-        success: false,
-        message: 'Empty request body: Expected JSON feedback payload.',
-      });
+      return createJsonResponse({ success: false, message: 'Empty request body.' });
     }
 
-    // Parse incoming payload
     var payload;
     try {
       payload = JSON.parse(e.postData.contents);
     } catch (parseErr) {
+      return createJsonResponse({ success: false, message: 'Malformed JSON payload.' });
+    }
+
+    var action = payload.action ? String(payload.action).trim().toLowerCase() : '';
+
+    // ─── 1. DECOMMISSIONED: Public Feedback Submission ─────────────────────
+    if (action === 'submit') {
       return createJsonResponse({
         success: false,
-        message: 'Malformed request: Unable to parse JSON payload.',
+        message: 'Public feedback submission has been decommissioned. Please use the admin import pipeline.',
       });
     }
 
-    // Access spreadsheet
+    // ─── 2. PUBLIC: Admin Login (PIN Verification, No Token Required) ──────
+    if (action === 'adminlogin') {
+      var loginResult = adminLogin(payload.pin || '');
+      return createJsonResponse(loginResult);
+    }
+
+    // ─── 3. ADMIN: Logout (Session Token REQUIRED) ─────────────────────────
+    // An unauthenticated or mismatched request CANNOT invalidate another user's session
+    if (action === 'adminlogout') {
+      var logoutToken = payload.token ? String(payload.token).trim() : '';
+      var logoutResult = adminLogout(logoutToken);
+      return createJsonResponse(logoutResult);
+    }
+
+    // ─── 4. ADMIN: Protected Operations (Session Token REQUIRED) ───────────
+    var token = payload.token ? String(payload.token).trim() : '';
+    var sessionCheck = validateAdminSession(token);
+    if (!sessionCheck.valid) {
+      // Distinguish temporary lock contention from genuine session expiration
+      if (sessionCheck.lockContention) {
+        return createJsonResponse({
+          success: false,
+          lockContention: true,
+          error: 'AUTH_BUSY',
+          message: sessionCheck.reason || 'Authentication service is temporarily busy. Please retry in a moment.',
+        });
+      }
+      return createJsonResponse({
+        success: false,
+        sessionExpired: true,
+        error: 'SESSION_EXPIRED',
+        message: sessionCheck.reason || 'Unauthorized: Active admin session required.',
+      });
+    }
+
     var ss = getSpreadsheet();
 
-    // 1. Fetch currently active products from database
-    var activeProducts = getActiveProducts(ss);
-    if (!activeProducts || activeProducts.length === 0) {
+    // Protected: Retrieve Feedback Records
+    if (action === 'getfeedback') {
+      var feedbackResult = getAdminFeedback(ss, {
+        page:          payload.page,
+        pageSize:      payload.pageSize,
+        productId:     payload.productId,
+        dateFrom:      payload.dateFrom,
+        dateTo:        payload.dateTo,
+      });
       return createJsonResponse({
-        success: false,
-        message: 'Submissions are currently closed because no active products are available in the system.',
+        success: true,
+        message: 'Feedback retrieved successfully.',
+        data: feedbackResult.records,
+        expiresAt: sessionCheck.expiresAt,
+        pagination: {
+          total:      feedbackResult.total,
+          page:       feedbackResult.page,
+          pageSize:   feedbackResult.pageSize,
+          totalPages: feedbackResult.totalPages,
+        },
       });
     }
 
-    // 2. Perform strict server-side validation & formula sanitization
-    var validation = validateFeedbackSubmission(payload, activeProducts);
-    if (!validation.isValid) {
+    // Protected: Retrieve Product Registry
+    if (action === 'getproducts') {
+      var products = payload.all ? getAllAdminProducts(ss) : getActiveProducts(ss);
       return createJsonResponse({
-        success: false,
-        message: validation.error || 'Validation failed.',
+        success: true,
+        data: products,
+        expiresAt: sessionCheck.expiresAt,
       });
     }
 
-    // 3. Atomically record feedback into Feedback sheet using LockService
-    var recordResult = recordFeedback(ss, validation.data);
+    // Protected: Add a New Product
+    if (action === 'adminaddproduct') {
+      var newProdName = payload.productName ? String(payload.productName).trim() : '';
+      var addResult = adminAddProduct(ss, newProdName);
 
-    return createJsonResponse({
-      success: true,
-      message: 'Feedback submitted successfully',
-      data: {
-        responseId: recordResult.responseId,
-        timestamp: recordResult.timestamp,
-        processingStatus: recordResult.processingStatus,
-      },
-    });
+      if (addResult.lockContention) {
+        return createJsonResponse({
+          success: false,
+          lockContention: true,
+          error: 'AUTH_BUSY',
+          message: addResult.message,
+        });
+      }
+
+      return createJsonResponse({
+        success: addResult.success,
+        productId: addResult.productId || null,
+        productName: addResult.productName || null,
+        message: addResult.message,
+        expiresAt: sessionCheck.expiresAt,
+      });
+    }
+
+    // Protected: Remove / Deactivate a Product
+    if (action === 'adminremoveproduct' || action === 'admindeactivateproduct') {
+      var prodIdToRemove = payload.productId ? String(payload.productId).trim() : '';
+      var removeResult = adminRemoveProduct(ss, prodIdToRemove);
+
+      if (removeResult.lockContention) {
+        return createJsonResponse({
+          success: false,
+          lockContention: true,
+          error: 'AUTH_BUSY',
+          message: removeResult.message,
+        });
+      }
+
+      return createJsonResponse({
+        success: removeResult.success,
+        productId: removeResult.productId || null,
+        productName: removeResult.productName || null,
+        message: removeResult.message,
+        expiresAt: sessionCheck.expiresAt,
+      });
+    }
+
+    // Protected: Change Admin PIN
+    if (action === 'adminchangepin') {
+      var currentPin = payload.currentPin ? String(payload.currentPin).trim() : '';
+      var newPin = payload.newPin ? String(payload.newPin).trim() : '';
+      var pinResult = adminChangePin(currentPin, newPin);
+
+      if (pinResult.lockContention) {
+        return createJsonResponse({
+          success: false,
+          lockContention: true,
+          error: 'AUTH_BUSY',
+          message: pinResult.message,
+        });
+      }
+
+      return createJsonResponse({
+        success: pinResult.success,
+        message: pinResult.message,
+        expiresAt: sessionCheck.expiresAt,
+      });
+    }
+
+    // Protected: Get Admin Profile
+    if (action === 'admingetprofile') {
+      var profileData = adminGetProfile();
+      return createJsonResponse({
+        success: true,
+        data: profileData,
+        expiresAt: sessionCheck.expiresAt,
+      });
+    }
+
+    // Protected: Update Admin Profile
+    if (action === 'adminupdateprofile') {
+      var updateName = payload.displayName ? String(payload.displayName).trim() : '';
+      var updateEmail = payload.email ? String(payload.email).trim() : '';
+      var updateResult = adminUpdateProfile(updateName, updateEmail);
+
+      if (updateResult.lockContention) {
+        return createJsonResponse({
+          success: false,
+          lockContention: true,
+          error: 'AUTH_BUSY',
+          message: updateResult.message,
+        });
+      }
+
+      return createJsonResponse({
+        success: updateResult.success,
+        data: updateResult.data || null,
+        message: updateResult.message,
+        expiresAt: sessionCheck.expiresAt,
+      });
+    }
+
+    // Protected: Import Feedback Records (Excel, CSV, Google Sheets)
+    if (action === 'adminimportfeedback' || action === 'importfeedback') {
+      var importPayloadRecords = Array.isArray(payload.records) ? payload.records : [];
+      var importResult = importFeedbackRecords(ss, importPayloadRecords);
+
+      if (importResult.lockContention) {
+        return createJsonResponse({
+          success: false,
+          lockContention: true,
+          error: 'AUTH_BUSY',
+          message: importResult.message,
+        });
+      }
+
+      return createJsonResponse({
+        success: importResult.success,
+        importedCount: importResult.importedCount,
+        duplicateCount: importResult.duplicateCount,
+        rejectedCount: importResult.rejectedCount,
+        errors: importResult.errors,
+        message: importResult.message,
+        expiresAt: sessionCheck.expiresAt,
+      });
+    }
+
+    return createJsonResponse({ success: false, message: 'Unknown action: ' + action });
+
   } catch (err) {
-    return createJsonResponse({
-      success: false,
-      message: err.message || 'An unexpected server error occurred while recording feedback.',
-    });
+    return createJsonResponse({ success: false, message: err.message || 'An unexpected error occurred.' });
   }
 }

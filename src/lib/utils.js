@@ -21,11 +21,13 @@ export function generateResponseId() {
 
 /**
  * Format an ISO timestamp string into a readable date and time.
+ * Returns '—' if the timestamp is missing, blank, or invalid.
  */
 export function formatDate(isoString) {
   if (!isoString) return '—';
   try {
     const d = new Date(isoString);
+    if (isNaN(d.getTime())) return '—';
     return d.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -34,7 +36,7 @@ export function formatDate(isoString) {
       minute: '2-digit',
     });
   } catch {
-    return isoString;
+    return '—';
   }
 }
 

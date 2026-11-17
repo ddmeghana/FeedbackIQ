@@ -8,12 +8,22 @@ export default function RecentFeedback({ records = [] }) {
   const recentItems = records.slice(0, 5);
 
   const getSentimentVariant = (sentiment) => {
-    const s = (sentiment || '').toLowerCase();
+    const s = (sentiment || '').trim().toLowerCase();
     if (s === 'positive') return 'positive';
     if (s === 'negative') return 'negative';
     if (s === 'neutral') return 'neutral';
     if (s === 'mixed') return 'mixed';
     return 'default';
+  };
+
+  const getSentimentLabel = (sentiment) => {
+    const s = (sentiment || '').trim();
+    return s === '' ? 'Pending' : s;
+  };
+
+  const getCategoryLabel = (category) => {
+    const c = (category || '').trim();
+    return c === '' ? '—' : c;
   };
 
   return (
@@ -83,12 +93,12 @@ export default function RecentFeedback({ records = [] }) {
                   </td>
                   <td className="py-3 whitespace-nowrap">
                     <Badge variant={getSentimentVariant(item.Sentiment)} dot size="sm">
-                      {item.Sentiment}
+                      {getSentimentLabel(item.Sentiment)}
                     </Badge>
                   </td>
                   <td className="py-3 whitespace-nowrap">
                     <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-muted">
-                      {item.Category}
+                      {getCategoryLabel(item.Category)}
                     </span>
                   </td>
                   <td className="py-3 max-w-xs sm:max-w-md">

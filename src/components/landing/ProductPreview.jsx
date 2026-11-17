@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import {
   Sparkles,
   Star,
@@ -7,11 +6,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   Filter,
-  ArrowRight,
-  ExternalLink,
 } from 'lucide-react';
 import Badge from '../ui/Badge';
-import { ROUTES } from '../../config/constants';
 import RevealOnScroll from '../animations/RevealOnScroll';
 
 export default function ProductPreview() {
@@ -49,12 +45,6 @@ export default function ProductPreview() {
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 font-semibold tracking-wider uppercase">
                   Sample Data · UI Preview
                 </span>
-                <Link
-                  to={ROUTES.DASHBOARD}
-                  className="text-xs font-medium text-accent hover:underline flex items-center gap-1 ml-2"
-                >
-                  Open Live <ExternalLink className="w-3 h-3" />
-                </Link>
               </div>
             </div>
 

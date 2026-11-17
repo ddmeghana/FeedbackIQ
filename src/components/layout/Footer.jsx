@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Sparkles, ArrowUpRight } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { ROUTES } from '../../config/constants';
 
 export default function Footer() {
@@ -24,7 +24,7 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Clean Navigation Links + Subtle Give Feedback Link */}
+          {/* Clean Navigation Links */}
           <div className="flex flex-wrap items-center gap-5 sm:gap-6 text-xs text-muted">
             <a href="/#home" className="hover:text-primary transition-colors">
               Home
@@ -37,14 +37,6 @@ export default function Footer() {
             </a>
             <Link to={ROUTES.DASHBOARD} className="hover:text-primary transition-colors">
               Dashboard
-            </Link>
-            <span className="text-border">|</span>
-            {/* Subtle Give Feedback link for respondents */}
-            <Link
-              to={ROUTES.SUBMIT}
-              className="text-accent hover:underline flex items-center gap-1 font-medium"
-            >
-              Give Feedback <ArrowUpRight className="w-3 h-3" />
             </Link>
           </div>
         </div>

@@ -427,15 +427,16 @@ export function filterFeedback(records, productId = 'ALL', dateRange = '30d') {
   }
 
   return records.filter((item) => {
-    // Product match
-    if (productId !== 'ALL' && item.Product_ID !== productId) {
+    // Product match (matches either Product_ID or Product_Name)
+    if (productId !== 'ALL' && item.Product_ID !== productId && item.Product_Name !== productId) {
       return false;
     }
 
     // Date match
     if (cutoffDate) {
+      if (!item.Timestamp) return false;
       const itemDate = new Date(item.Timestamp);
-      if (itemDate < cutoffDate) {
+      if (isNaN(itemDate.getTime()) || itemDate < cutoffDate) {
         return false;
       }
     }
@@ -478,6 +479,10 @@ export function calculateKPIs(records) {
 
 /**
  * Calculate sentiment shares for donut / pie charts.
+ *
+ * PHASE 6B NOTE: Before Gemini AI analysis runs, Sentiment fields are blank ('').
+ * Blank sentiment is counted as 'Pending Analysis', NOT classified as Neutral or Unclear.
+ * This prevents misleading charts while AI analysis has not yet been applied.
  */
 export function calculateSentimentDistribution(records) {
   const total = records.length;
@@ -489,34 +494,43 @@ export function calculateSentimentDistribution(records) {
     Negative: 0,
     Mixed: 0,
     Unclear: 0,
+    'Pending Analysis': 0,
   };
 
   records.forEach((r) => {
-    if (counts[r.Sentiment] !== undefined) {
-      counts[r.Sentiment]++;
+    const sentiment = (r.Sentiment || '').trim();
+    if (sentiment === '') {
+      counts['Pending Analysis']++;
+    } else if (counts[sentiment] !== undefined) {
+      counts[sentiment]++;
     } else {
       counts.Unclear++;
     }
   });
 
   return [
-    { name: 'Positive', count: counts.Positive, pct: Math.round((counts.Positive / total) * 100), color: '#10B981' },
-    { name: 'Neutral',  count: counts.Neutral,  pct: Math.round((counts.Neutral / total) * 100),  color: '#F59E0B' },
-    { name: 'Negative', count: counts.Negative, pct: Math.round((counts.Negative / total) * 100), color: '#EF4444' },
-    { name: 'Mixed',    count: counts.Mixed,    pct: Math.round((counts.Mixed / total) * 100),    color: '#8B5CF6' },
-    { name: 'Unclear',  count: counts.Unclear,  pct: Math.round((counts.Unclear / total) * 100),  color: '#6B7280' },
+    { name: 'Positive',         count: counts.Positive,           pct: Math.round((counts.Positive / total) * 100),           color: '#10B981' },
+    { name: 'Neutral',          count: counts.Neutral,            pct: Math.round((counts.Neutral / total) * 100),            color: '#F59E0B' },
+    { name: 'Negative',         count: counts.Negative,           pct: Math.round((counts.Negative / total) * 100),           color: '#EF4444' },
+    { name: 'Mixed',            count: counts.Mixed,              pct: Math.round((counts.Mixed / total) * 100),              color: '#8B5CF6' },
+    { name: 'Unclear',          count: counts.Unclear,            pct: Math.round((counts.Unclear / total) * 100),            color: '#6B7280' },
+    { name: 'Pending Analysis', count: counts['Pending Analysis'], pct: Math.round((counts['Pending Analysis'] / total) * 100), color: '#94A3B8' },
   ].filter((item) => item.count > 0);
 }
 
 /**
  * Calculate category breakdown counts.
+ *
+ * PHASE 6B NOTE: Before Gemini AI analysis runs, Category fields are blank ('').
+ * Blank categories are shown as 'Pending Analysis', not silently grouped under 'Other'.
  */
 export function calculateCategoryDistribution(records) {
   const map = {};
 
   records.forEach((r) => {
-    const cat = r.Category || 'Other';
-    map[cat] = (map[cat] || 0) + 1;
+    const cat = (r.Category || '').trim();
+    const displayCat = cat === '' ? 'Pending Analysis' : cat;
+    map[displayCat] = (map[displayCat] || 0) + 1;
   });
 
   // Sort descending by count
@@ -531,12 +545,17 @@ export function calculateCategoryDistribution(records) {
 /**
  * Calculate feedback volume trend over time.
  * Groups by date (formatted as 'MMM D').
+ * Records with missing or invalid timestamps are safely excluded from the timeline.
  */
 export function calculateFeedbackTrend(records) {
   if (records.length === 0) return [];
 
+  // Filter to records with valid parseable timestamps
+  const validRecords = records.filter((r) => r.Timestamp && !isNaN(new Date(r.Timestamp).getTime()));
+  if (validRecords.length === 0) return [];
+
   // Sort chronological
-  const sorted = [...records].sort((a, b) => new Date(a.Timestamp) - new Date(b.Timestamp));
+  const sorted = [...validRecords].sort((a, b) => new Date(a.Timestamp) - new Date(b.Timestamp));
 
   const map = {};
   sorted.forEach((r) => {
@@ -575,7 +594,11 @@ export function calculateRatingDistribution(records) {
  */
 export function calculateProductComparison(records, products) {
   return products.map((prod) => {
-    const prodRecords = records.filter((r) => r.Product_ID === prod.Product_ID);
+    const prodRecords = records.filter(
+      (r) =>
+        r.Product_ID === prod.Product_ID ||
+        (r.Product_Name && prod.Product_Name && r.Product_Name.trim().toLowerCase() === prod.Product_Name.trim().toLowerCase())
+    );
     const kpis = calculateKPIs(prodRecords);
 
     return {
